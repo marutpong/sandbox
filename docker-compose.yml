@@ -1,5 +1,36 @@
 version: '2'
 services:
+
+  grafana:
+    image: grafana/grafana:latest
+    ports: 
+        - 8000:3000
+    links:
+        - influxdb:influxdb
+    environment:
+        GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource"
+        #GF_INSTALL_PLUGINS: "abhisant-druid-datasource,adremsoft-netcrunch-app,alexanderzobnin-zabbix-app,ayoungprogrammer-finance-datasource,belugacdn-app,bessler-pictureit-panel,bosun-app,briangann-datatable-panel,briangann-gauge-panel,btplc-alarm-box-panel,btplc-peak-report-panel,btplc-status-dot-panel,btplc-trend-box-panel,camptocamp-prometheus-alertmanager-datasource,citilogics-geoloop-panel,cloudflare-app,crate-datasource,dalmatinerdb-datasource,ddurieux-glpi-app,devicehive-devicehive-datasource,digiapulssi-breadcrumb-panel,digiapulssi-organisations-panel,digrich-bubblechart-panel,fastweb-openfalcon-datasource,fetzerch-sunandmoon-datasource,foursquare-clouderamanager-datasource,fzakaria-simple-annotations-datasource,gnocchixyz-gnocchi-datasource,grafana-azure-monitor-datasource,grafana-clock-panel,grafana-example-app,grafana-influxdb-08-datasource,grafana-kairosdb-datasource,grafana-piechart-panel,grafana-simple-json-datasource,grafana-worldmap-panel,gridprotectionalliance-openhistorian-datasource,gridprotectionalliance-osisoftpi-datasource,hawkular-datasource,ibm-apm-datasource,jasonlashua-prtg-datasource,jdbranham-diagram-panel,kentik-app,linksmart-hds-datasource,michaeldmoore-annunciator-panel,monasca-datasource,monitoringartist-monitoringart-datasource,mtanda-google-calendar-datasource,mtanda-heatmap-epoch-panel,mtanda-histogram-panel,natel-discrete-panel,natel-influx-admin-panel,natel-plotly-panel,neocat-cal-heatmap-panel,novalabs-annotations-panel,ns1-app,ntop-ntopng-datasource,opennms-helm-app,percona-percona-app,petrslavotinek-carpetplot-panel,praj-ams-datasource,rackerlabs-blueflood-datasource,radensolutions-netxms-datasource,raintank-kubernetes-app,raintank-snap-app,raintank-worldping-app,ryantxu-ajax-panel,satellogic-3d-globe-panel,savantly-heatmap-panel,sidewinder-datasource,skydive-datasource,sni-pnp-datasource,stagemonitor-elasticsearch-app,udoprog-heroic-datasource,vertamedia-clickhouse-datasource,vonage-status-panel,voxter-app"
+        GF_SECURITY_ADMIN_USER: admin
+        GF_SECURITY_ADMIN_PASSWORD: admin
+        GF_SECURITY_SECRET_KEY: grafana
+        GF_USERS_ALLOW_SIGN_UP: "true"
+        GF_USERS_ALLOW_ORG_CREATE: "true"
+        GF_AUTH_ANONYMOUS_ENABLED: "true"
+        GF_AUTH_ANONYMOUS_ORG_NAME: grafana
+        GF_DASHBOARDS_JSON_ENABLED: "true"
+        GF_DASHBOARDS_JSON_PATH: /opt/grafana
+    volumes_from:
+        - grafana-data
+    restart: always
+
+  grafana-data:
+      image: busybox
+      tty: true
+      volumes:
+          - ./grafana/data/lib/:/var/lib/grafana
+          - ./grafana/data/log/:/var/log/grafana
+          - ./grafana/data/lib/plugins/:/var/lib/grafana/plugins
+          
   chronograf:
     # Full tag list: https://hub.docker.com/r/library/chronograf/tags/
     image: quay.io/influxdb/chronograf:1.4.0.0
@@ -17,6 +48,7 @@ services:
       - kapacitor
       - influxdb
       - telegraf
+
   telegraf:
     # Full tag list: https://hub.docker.com/r/library/telegraf/tags/
     image: telegraf:1.5.0
@@ -32,6 +64,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - influxdb
+
   influxdb:
     # Full tag list: https://hub.docker.com/r/library/influxdb/tags/
     image: influxdb:1.4.2
@@ -43,6 +76,15 @@ services:
     ports:
       # The API for InfluxDB is served on port 8086
       - "8086:8086"
+    environment:
+      INFLUXDB_HTTP_AUTH_ENABLED: "true"
+      INFLUXDB_ADMIN_USER: influxdb
+      INFLUXDB_ADMIN_PASSWORD: influxdb
+      INFLUXDB_READ_USER: reader
+      INFLUXDB_READ_USER_PASSWORD: reader
+      INFLUXDB_WRITE_USER: writer
+      INFLUXDB_WRITE_USER_PASSWORD: writer
+
   kapacitor:
     # Full tag list: https://hub.docker.com/r/library/kapacitor/tags/
     image: kapacitor:1.4.0
@@ -57,6 +99,7 @@ services:
     ports:
       # The API for Kapacitor is served on port 9092
       - "9092:9092"
+
   documentation:
     build:
       context: ./documentation
