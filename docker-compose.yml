@@ -30,6 +30,7 @@ services:
           - ./grafana/data/lib/:/var/lib/grafana
           - ./grafana/data/log/:/var/log/grafana
           - ./grafana/data/lib/plugins/:/var/lib/grafana/plugins
+      restart: always
           
   chronograf:
     # Full tag list: https://hub.docker.com/r/library/chronograf/tags/
@@ -48,6 +49,7 @@ services:
       - kapacitor
       - influxdb
       - telegraf
+    restart: always
 
   telegraf:
     # Full tag list: https://hub.docker.com/r/library/telegraf/tags/
@@ -64,6 +66,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - influxdb
+    restart: always
 
   influxdb:
     # Full tag list: https://hub.docker.com/r/library/influxdb/tags/
@@ -84,6 +87,7 @@ services:
       INFLUXDB_READ_USER_PASSWORD: reader
       INFLUXDB_WRITE_USER: writer
       INFLUXDB_WRITE_USER_PASSWORD: writer
+    restart: always
 
   kapacitor:
     # Full tag list: https://hub.docker.com/r/library/kapacitor/tags/
@@ -99,9 +103,11 @@ services:
     ports:
       # The API for Kapacitor is served on port 9092
       - "9092:9092"
+    restart: always
 
   documentation:
     build:
       context: ./documentation
     ports: 
       - "3000:3000"
+    restart: always
